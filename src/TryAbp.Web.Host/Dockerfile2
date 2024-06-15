@@ -1,0 +1,29 @@
+#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER app
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["src/TryAbp.Web.Host/TryAbp.Web.Host.csproj", "src/TryAbp.Web.Host/"]
+COPY ["src/TryAbp.Web.Core/TryAbp.Web.Core.csproj", "src/TryAbp.Web.Core/"]
+COPY ["src/TryAbp.Application/TryAbp.Application.csproj", "src/TryAbp.Application/"]
+COPY ["src/TryAbp.Core/TryAbp.Core.csproj", "src/TryAbp.Core/"]
+COPY ["src/TryAbp.EntityFrameworkCore/TryAbp.EntityFrameworkCore.csproj", "src/TryAbp.EntityFrameworkCore/"]
+RUN dotnet restore "./src/TryAbp.Web.Host/TryAbp.Web.Host.csproj"
+COPY . .
+WORKDIR "/src/src/TryAbp.Web.Host"
+RUN dotnet build "./TryAbp.Web.Host.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./TryAbp.Web.Host.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "TryAbp.Web.Host.dll"]

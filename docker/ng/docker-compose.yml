@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  abp_host:
+    image: abp/host
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Staging"
+      ConnectionStrings__Default: "Server=172.17.0.3; Database=TryAbpDb; User=sa; Password=P@ssw0rd;TrustServerCertificate=True;"
+      App__ServerRootAddress: "http://localhost:9091/"
+      App__ClientRootAddress: "http://localhost:9090/"
+      App__CorsOrigins: "http://localhost:9090"
+      TZ: "Asia/Manila"
+      Kestrel__Endpoints__Http__Url: "http://+:80"
+    ports:
+      - "9091:80"
+    volumes:
+      - "./Host-Logs:/app/App_Data/Logs"
+    restart: always
